@@ -11,8 +11,8 @@ Contact:	coder5678@gmail.com
 -------------------------------------'''
 
 # globals for user interface
-WIDTH = 800
-HEIGHT = 600
+WIDTH = 1000
+HEIGHT = 700
 score = 0
 lives = 3
 timeSet = 0.5
@@ -323,26 +323,27 @@ def keystate(evt, my):
 saved_lives = ''
 saved_score = ''
 saved_elTime = ''
+saved_time = ''
 def writeScore(displaySurface):
-	global stTime, saved_lives, saved_score, saved_elTime
+	global stTime, saved_lives, saved_score, saved_elTime, saved_time
 	now = time.time()
 	tm = now - stTime
 	elTime = formatTime(tm)
 	w = ''
 	if(started): 
-		w = 'lives = ' + str(lives) + '    score = ' + str(score) + '   elapsed time = ' + elTime
+		w = 'lives = ' + str(lives) + '    score = ' + str(score) + '   elapsed time = ' + elTime + '    score rate = ' + str('%0.1f'%(score/tm)) + ' / sec'
 		saved_lives = lives
 		saved_score = score
 		saved_elTime = elTime
-	else: w = 'lives = ' + str(saved_lives-1) + '    score = ' + str(saved_score) + '   elapsed time = ' + saved_elTime
+		saved_time = tm
+	else: w = 'lives = ' + str(saved_lives-1) + '    score = ' + str(saved_score) + '   elapsed time = ' + saved_elTime + '     score rate = ' + str('%0.1f'%(saved_score/saved_time)) + ' /sec'
 
 	liveSurf = basicFont.render(w, 1, (0, 255, 0))
 	liveRect = liveSurf.get_rect()
-	liveRect.center = (240, 20)
+	liveRect.center = (340, 20)
 	displaySurface.blit(liveSurf, liveRect)
 
 #-------------------------------------------------------------------------------
-
 def formatTime(tm):
 	hr = int(tm / 3600)
 	if len(str(hr)) < 2: hr = '0' + str(hr)
