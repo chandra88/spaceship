@@ -2,6 +2,14 @@ import random, math, time, pygame, sys, copy
 from pygame.locals import *
 import pygame.mixer
 
+'''-------------------------------------
+Program:	Classic spaceship game	
+Author:		Chandra Nepali
+Version:	1.1
+Date:		June 2, 2015	
+Contact:	coder5678@gmail.com
+-------------------------------------'''
+
 # globals for user interface
 WIDTH = 800
 HEIGHT = 600
@@ -17,12 +25,13 @@ pygame.init()
 pygame.font.init()
 pygame.mixer.init()
 
-
 #-------------------------------------------------------------------------------
+# covert angle to x any y-components
 def angle_to_vector(ang):
 	return [math.cos(ang), math.sin(ang)]
 
 #-------------------------------------------------------------------------------
+# stire image information
 class ImageInfo:
 	def __init__(self, center, size, radius = 0, lifespan = None, animated = False):
 		self.center = center
@@ -62,10 +71,16 @@ explosion_info = ImageInfo([64, 64], [128, 128], 17, 24, True)
 explosion_image = pygame.image.load("explosion_alpha.png")
 
 missile_sound = pygame.mixer.Sound('missile.ogg')
-missile_sound.set_volume(0.5)
+missile_sound.set_volume(0.3)
+
 sound_track = pygame.mixer.Sound('soundtrack.ogg')
+sound_track.set_volume(0.1)
+
 explosion_sound = pygame.mixer.Sound('explosion.ogg')
+explosion_sound.set_volume(0.3)
+
 ship_thrust_sound = pygame.mixer.Sound('thrust.ogg')
+ship_thrust_sound.set_volume(0.2)
 
 #-------------------------------------------------------------------------------
 # Ship class
@@ -97,7 +112,8 @@ class Ship:
 			rot_rect = rot_image.get_rect()
 			rot_rect.center = (self.pos[0], self.pos[1])
 			displaySurface.blit(rot_image, rot_rect)
-			sound_track.play()
+			ship_thrust_sound.stop()
+	#		sound_track.play()
 
 	#-----------------------------------------
 	def rotateRight(self): self.angle_vel -= 1.5
@@ -108,7 +124,6 @@ class Ship:
 	def get_thrust(self): return self.thrust
 
 	def update(self):
-		global nebula
 		self.pos[0] += self.vel[0]
 		self.pos[1] -= self.vel[1]
 		self.angle += self.angle_vel
@@ -155,7 +170,6 @@ class Sprite:
 		self.animated = info.get_animated()
 		self.age = 0
 		if sound:
-		#	sound.rewind()
 			sound.play()
    
 	def get_pos(self): return self.pos
@@ -207,6 +221,8 @@ def draw():
 	center = debris_info.get_center()
 	size = debris_info.get_size()
 
+#	sound_track.play()
+
 	displaySurface.blit(debris_image, (wtime - WIDTH/1, HEIGHT/8))
 	displaySurface.blit(debris_image, (wtime - WIDTH/2, HEIGHT/8))
 
@@ -237,7 +253,8 @@ def rock_spawner(my):
 	pos2 = random.random() * HEIGHT
 	ship_pos = my.get_pos()
 	d = math.sqrt( (ship_pos[0]-pos1)*(ship_pos[0]-pos1) + (ship_pos[1]-pos2)*(ship_pos[1]-pos2) )
-	sep = d - my.get_radius()*1.5    
+#	sep = d - my.get_radius()*1.5    
+	sep = d - my.get_radius() - 1.2*asteroid_info.get_radius()
 	vel = random.random() * 3.0
 	ang = random.random() * 3.14
 	vel1 = vel*math.cos(ang)
@@ -281,19 +298,24 @@ def group_group_collide(rocks, missiles):
 def keystate(evt, my):
 	global started, lives, score
 	if evt.type == pygame.KEYDOWN:
-		if(evt.key == pygame.K_LEFT): my.rotateLeft()
-		if(evt.key == pygame.K_RIGHT): my.rotateRight()
-		if(evt.key == pygame.K_UP): my.set_thrust(True)
-		if(evt.key == pygame.K_SPACE and started == True): my.shoot()
-		if(evt.key == pygame.K_RETURN and started == False):
+		if(evt.key == pygame.K_LEFT and started == True): my.rotateLeft()
+		elif(evt.key == pygame.K_RIGHT and started == True): my.rotateRight()
+		elif(evt.key == pygame.K_UP and started == True): my.set_thrust(True)
+		elif(evt.key == pygame.K_SPACE and started == True): my.shoot()
+		elif(evt.key == pygame.K_RETURN and started == False):
 			started = True
 			lives = 3
 			score = 0
 
-	if evt.type == pygame.KEYUP:
+	elif evt.type == pygame.KEYUP:
 		if(evt.key == pygame.K_LEFT or evt.key == pygame.K_RIGHT): my.noRotate()
-		if(evt.key == pygame.K_UP): my.set_thrust(False)
-		if(evt.key == pygame.K_RETURN): pass
+		elif(evt.key == pygame.K_UP): my.set_thrust(False)
+		elif(evt.key == pygame.K_RETURN): pass
+
+	elif(evt.type == pygame.MOUSEBUTTONDOWN and started == False):
+		started = True
+		lives = 3
+		score = 0
 
 #-------------------------------------------------------------------------------
 def writeScore(displaySurface):
@@ -310,10 +332,8 @@ def click(pos):
 		started = True
 		lives = 3
 		score = 0
-#		soundtrack.rewind()
-#		ship_thrust_sound.rewind()
-#-------------------------------------------------------------------------------
 
+#-------------------------------------------------------------------------------
 clock = pygame.time.Clock()
 displaySurface = pygame.display.set_mode((WIDTH, HEIGHT))
 pygame.display.set_caption('Asteroids')
@@ -327,7 +347,6 @@ ship2 = pygame.image.load('ship2.png')
 my_ship = Ship([WIDTH/2, HEIGHT/2], [0, 0], 0, ship1, ship2, ship_info)
 
 #-------------------------------------------------------------------------------
-
 started = True
 while True:
 	displaySurface.blit(bkimage, (0, 0))
@@ -337,7 +356,9 @@ while True:
 			sys.exit()
 
 		keystate(event, my_ship)
+
 	draw()
 
 	pygame.display.update()
 	clock.tick(400)
+#-------------------------------------------------------------------------------
