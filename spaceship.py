@@ -11,8 +11,8 @@ Contact:	coder5678@gmail.com
 -------------------------------------'''
 
 # globals for user interface
-WIDTH = 1000
-HEIGHT = 700
+WIDTH = 1200
+HEIGHT = 800
 score = 0
 lives = 3
 timeSet = 0.5
@@ -118,8 +118,8 @@ class Ship:
 	#		sound_track.play()
 
 	#-----------------------------------------
-	def rotateRight(self): self.angle_vel -= 1.5
-	def rotateLeft(self): self.angle_vel += 1.5        
+	def rotateRight(self): self.angle_vel -= 2.0
+	def rotateLeft(self): self.angle_vel += 2.0        
 	def noRotate(self): self.angle_vel = 0.0
 
 	def set_thrust(self, th): self.thrust = th
@@ -320,23 +320,23 @@ def keystate(evt, my):
 		score = 0
 		stTime = time.time()
 #-------------------------------------------------------------------------------
-saved_lives = ''
-saved_score = ''
-saved_elTime = ''
-saved_time = ''
+saved_lives = 0
+saved_score = 0
+saved_time = 0
 def writeScore(displaySurface):
-	global stTime, saved_lives, saved_score, saved_elTime, saved_time
+	global stTime, saved_lives, saved_score, saved_time
 	now = time.time()
 	tm = now - stTime
 	elTime = formatTime(tm)
 	w = ''
 	if(started): 
-		w = 'lives = ' + str(lives) + '    score = ' + str(score) + '   elapsed time = ' + elTime + '    score rate = ' + str('%0.1f'%(score/tm)) + ' / sec'
+		w = 'lives = ' + str(lives) + '    score = ' + str(score) + '   elapsed time = ' + str(elTime) + '    score rate = ' + str('%0.1f'%(score/tm)) + ' / sec'
 		saved_lives = lives
 		saved_score = score
-		saved_elTime = elTime
 		saved_time = tm
-	else: w = 'lives = ' + str(saved_lives-1) + '    score = ' + str(saved_score) + '   elapsed time = ' + saved_elTime + '     score rate = ' + str('%0.1f'%(saved_score/saved_time)) + ' /sec'
+	else: 
+		saved_elTime = formatTime(saved_time)
+		w = 'lives = ' + str(max(saved_lives-1, 0)) + '    score = ' + str(saved_score) + '   elapsed time = ' + str(saved_elTime) + '     score rate = ' + str('%0.1f'%(saved_score/max(saved_time,1))) + ' /sec'
 
 	liveSurf = basicFont.render(w, 1, (0, 255, 0))
 	liveRect = liveSurf.get_rect()
@@ -374,11 +374,26 @@ ship2 = pygame.image.load('ship2.png')
 my_ship = Ship([WIDTH/2, HEIGHT/2], [0, 0], 0, ship1, ship2, ship_info)
 
 #-------------------------------------------------------------------------------
-started = True
+started = False
+begin = True
+
+#-------------------------------------------------------------------------------
 
 stTime = time.time()
 while True:
 	displaySurface.blit(bkimage, (0, 0))
+	if(begin and not started):
+		ws1 = 'left arrow: left rotation      '
+		ws2 = 'right arrow: right rotation      '
+		ws3 = 'up arrow: thrust      '
+		ws4 = 'space bar: shoot'
+		ws = ws1 + ws2 + ws3 + ws4
+		liveSurf = basicFont.render(ws, 2, (0, 255, 0))
+		liveRect = liveSurf.get_rect()
+		liveRect.center = (412, 50)
+		displaySurface.blit(liveSurf, liveRect)
+		#---------------------------------------------------------------
+
 	for event in pygame.event.get():
 		if event.type == pygame.QUIT:
 			pygame.quit()
