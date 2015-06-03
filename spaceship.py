@@ -15,7 +15,7 @@ WIDTH = 800
 HEIGHT = 600
 score = 0
 lives = 3
-time = 0.5
+timeSet = 0.5
 rock_group = set([])
 missile_group = set([])
 started = False
@@ -24,6 +24,8 @@ explosion_group = set([])
 pygame.init()
 pygame.font.init()
 pygame.mixer.init()
+elTime = 0.0
+stTime = 0.0
 
 #-------------------------------------------------------------------------------
 # covert angle to x any y-components
@@ -213,15 +215,13 @@ class Sprite:
 
 #-------------------------------------------------------------------------------
 def draw():
-	global time, lives, score, started
+	global timeSet, lives, score, started
     
 	# animiate background
-	time += 1
-	wtime = (time/4) % WIDTH
+	timeSet += 1
+	wtime = (timeSet/4) % WIDTH
 	center = debris_info.get_center()
 	size = debris_info.get_size()
-
-#	sound_track.play()
 
 	displaySurface.blit(debris_image, (wtime - WIDTH/1, HEIGHT/8))
 	displaySurface.blit(debris_image, (wtime - WIDTH/2, HEIGHT/8))
@@ -296,7 +296,7 @@ def group_group_collide(rocks, missiles):
 
 #-------------------------------------------------------------------------------
 def keystate(evt, my):
-	global started, lives, score
+	global started, lives, score, elTime, stTime
 	if evt.type == pygame.KEYDOWN:
 		if(evt.key == pygame.K_LEFT and started == True): my.rotateLeft()
 		elif(evt.key == pygame.K_RIGHT and started == True): my.rotateRight()
@@ -306,6 +306,8 @@ def keystate(evt, my):
 			started = True
 			lives = 3
 			score = 0
+			elTime = 0.0
+			stTime = time.time()
 
 	elif evt.type == pygame.KEYUP:
 		if(evt.key == pygame.K_LEFT or evt.key == pygame.K_RIGHT): my.noRotate()
@@ -316,28 +318,52 @@ def keystate(evt, my):
 		started = True
 		lives = 3
 		score = 0
-
+		stTime = time.time()
 #-------------------------------------------------------------------------------
+saved_lives = ''
+saved_score = ''
+saved_elTime = ''
 def writeScore(displaySurface):
-	liveSurf = basicFont.render('lives = ' + str(lives) + '    score = ' + str(score), 1, (0, 255, 0))
+	global stTime, saved_lives, saved_score, saved_elTime
+	now = time.time()
+	tm = now - stTime
+	elTime = formatTime(tm)
+	w = ''
+	if(started): 
+		w = 'lives = ' + str(lives) + '    score = ' + str(score) + '   elapsed time = ' + elTime
+		saved_lives = lives
+		saved_score = score
+		saved_elTime = elTime
+	else: w = 'lives = ' + str(saved_lives-1) + '    score = ' + str(saved_score) + '   elapsed time = ' + saved_elTime
+
+	liveSurf = basicFont.render(w, 1, (0, 255, 0))
 	liveRect = liveSurf.get_rect()
-	liveRect.center = (100, 20)
+	liveRect.center = (240, 20)
 	displaySurface.blit(liveSurf, liveRect)
 
 #-------------------------------------------------------------------------------
-def click(pos):
-	global started, lives, score
-	if(started): pass
-	else:
-		started = True
-		lives = 3
-		score = 0
 
+def formatTime(tm):
+	hr = int(tm / 3600)
+	if len(str(hr)) < 2: hr = '0' + str(hr)
+	else: hr = str(hr)
+
+	mn = int((tm % 3600)/60)
+	if len(str(mn)) < 2: mn = '0' + str(mn)
+	else: mn = str(mn)
+
+	se = (tm % 3600) % 60
+	se = '%0.2f'%se
+
+	tt = hr + ' : ' + mn + ' : ' + str(se)
+	return tt
 #-------------------------------------------------------------------------------
+
+
 clock = pygame.time.Clock()
 displaySurface = pygame.display.set_mode((WIDTH, HEIGHT))
 pygame.display.set_caption('Asteroids')
-basicFont = pygame.font.Font('freesansbold.ttf', 16)
+basicFont = pygame.font.SysFont('comicsansms', 16)
 
 bkimage = pygame.image.load('nebula_blue.s2014.png').convert()
 bkimage = pygame.transform.scale(bkimage, (WIDTH, HEIGHT))
@@ -348,6 +374,8 @@ my_ship = Ship([WIDTH/2, HEIGHT/2], [0, 0], 0, ship1, ship2, ship_info)
 
 #-------------------------------------------------------------------------------
 started = True
+
+stTime = time.time()
 while True:
 	displaySurface.blit(bkimage, (0, 0))
 	for event in pygame.event.get():
